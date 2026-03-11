@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<title>My Fitness Routine</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #09090F;
+    --surface: #111119;
+    --border: #1E1E2E;
+    --text: #E0D8F0;
+    --muted: #6060808;
+    --dim: #5A5A78;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+    padding-bottom: 80px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .header {
+    padding: 40px 20px 24px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, #0D0D1C 0%, var(--bg) 100%);
+  }
+  .eyebrow {
+    font-size: 10px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #555570;
+    margin-bottom: 10px;
+  }
+  .title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(24px, 7vw, 38px);
+    font-weight: 400;
+    line-height: 1.2;
+    color: #EDE8F8;
+  }
+  .title span { color: #9D6FE8; font-style: italic; }
+  .subtitle {
+    font-size: 11px;
+    color: #555570;
+    margin-top: 10px;
+    letter-spacing: 1px;
+  }
+  .targets {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 20px;
+  }
+  .target-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .target-icon { font-size: 18px; flex-shrink: 0; }
+  .target-label { font-size: 10px; font-weight: 500; color: #C0B8E0; letter-spacing: 1px; text-transform: uppercase; }
+  .target-desc { font-size: 10px; color: #44445E; margin-top: 3px; line-height: 1.4; font-family: 'JetBrains Mono', monospace; }
+
+  .section-label {
+    font-size: 9px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #555570;
+    padding: 0 20px;
+    margin-bottom: 10px;
+  }
+
+  .day-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 0 20px 20px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .day-tabs::-webkit-scrollbar { display: none; }
+  .day-tab {
+    flex-shrink: 0;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: #666680;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .day-tab.active {
+    font-weight: 500;
+    color: #000;
+  }
+
+  .day-panel { display: none; padding: 0 20px; }
+  .day-panel.active { display: block; }
+
+  .day-header {
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 12px;
+    border: 1px solid transparent;
+  }
+  .day-eyebrow { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 4px; }
+  .day-title { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 400; color: #EDE8F8; }
+  .day-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .tag {
+    border-radius: 5px;
+    padding: 3px 8px;
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+  }
+
+  .block { margin-bottom: 8px; }
+  .block-header {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.2s, border-radius 0.2s;
+  }
+  .block-header.open { border-radius: 12px 12px 0 0; }
+  .block-left { display: flex; align-items: center; gap: 12px; }
+  .block-icon { font-size: 20px; }
+  .block-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #7070908; margin-bottom: 2px; }
+  .block-note { font-size: 9px; margin-left: 6px; letter-spacing: 1px; opacity: 0.8; }
+  .block-dur { font-size: 14px; color: #C0B8E0; font-family: 'JetBrains Mono', monospace; }
+  .block-arrow { font-size: 20px; transition: transform 0.2s; }
+  .block-arrow.open { transform: rotate(90deg); }
+
+  .block-body {
+    display: none;
+    background: #0C0C16;
+    border: 1px solid transparent;
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+  }
+  .block-body.open { display: block; }
+  .block-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 9px 16px;
+    border-bottom: 1px solid #181828;
+  }
+  .block-item:last-child { border-bottom: none; }
+  .item-dot { font-size: 10px; margin-top: 4px; flex-shrink: 0; }
+  .item-text { font-size: 13px; color: #B0A8C8; line-height: 1.5; font-family: 'JetBrains Mono', monospace; }
+
+  .info-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin: 12px 0;
+  }
+  .info-card-label { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #555570; margin-bottom: 12px; }
+
+  .week-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .week-day-col { text-align: center; }
+  .week-bar { width: 100%; height: 4px; border-radius: 2px; margin-bottom: 5px; }
+  .week-name { font-size: 9px; color: #555570; letter-spacing: 0.5px; }
+  .week-tags { font-size: 8px; color: #33334A; margin-top: 2px; line-height: 1.3; }
+  .rest-note { font-size: 11px; color: #44445E; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); line-height: 1.6; }
+
+  .prog-row { display: flex; gap: 14px; padding: 9px 0; border-bottom: 1px solid #181828; }
+  .prog-row:last-child { border-bottom: none; }
+  .prog-week { font-size: 10px; color: #7C5FC0; min-width: 80px; flex-shrink: 0; margin-top: 1px; }
+  .prog-tip { font-size: 12px; color: #9090B0; line-height: 1.5; }
+
+  .equip-note { font-size: 12px; color: #44445E; line-height: 1.7; }
+  .equip-sub { font-size: 11px; color: #33334A; margin-top: 8px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <p class="eyebrow">5-Day Morning Program</p>
+  <h1 class="title">Strength · Cardio · Yoga<br><span>+ Sudarshan Kriya</span></h1>
+  <p class="subtitle">60 min · Gym + Home · Beginner → Intermediate</p>
+</div>
+
+<div class="targets">
+  <div class="target-card"><span class="target-icon">💪</span><div><div class="target-label">Muscle Toning</div><div class="target-desc">Progressive overload with dumbbells + bodyweight</div></div></div>
+  <div class="target-card"><span class="target-icon">🤸</span><div><div class="target-label">Flexibility</div><div class="target-desc">Daily yoga targeting major muscle groups</div></div></div>
+  <div class="target-card"><span class="target-icon">❤️</span><div><div class="target-label">Heart Health</div><div class="target-desc">2–3 cardio sessions in aerobic zone</div></div></div>
+  <div class="target-card"><span class="target-icon">🧠</span><div><div class="target-label">Calm Nervous System</div><div class="target-desc">Daily Sudarshan Kriya post-workout</div></div></div>
+</div>
+
+<p class="section-label">Select Day</p>
+<div class="day-tabs">
+  <button class="day-tab active" style="background:#C084FC;border-color:#C084FC;" onclick="switchDay(0,this)">Monday</button>
+  <button class="day-tab" onclick="switchDay(1,this)">Tuesday</button>
+  <button class="day-tab" onclick="switchDay(2,this)">Wednesday</button>
+  <button class="day-tab" onclick="switchDay(3,this)">Thursday</button>
+  <button class="day-tab" onclick="switchDay(4,this)">Saturday</button>
+</div>
+
+<!-- MONDAY -->
+<div class="day-panel active" id="panel-0">
+  <div class="day-header" style="background:linear-gradient(135deg,#7C3AED22,#111119 60%);border-color:#C084FC33;">
+    <p class="day-eyebrow" style="color:#C084FC;">Monday</p>
+    <h2 class="day-title">Upper Body + Flow</h2>
+    <div class="day-tags">
+      <span class="tag" style="background:#C084FC22;color:#C084FC;border-color:#C084FC44;">Strength</span>
+      <span class="tag" style="background:#C084FC22;color:#C084FC;border-color:#C084FC44;">Yoga</span>
+      <span class="tag" style="background:#C084FC22;color:#C084FC;border-color:#C084FC44;">Kriya</span>
+    </div>
+  </div>
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-left"><span class="block-icon">🌅</span><div><div class="block-label" style="color:#9090B0;">Warm-Up</div><div class="block-dur">5 min</div></div></div>
+      <span class="block-arrow" style="color:#C084FC;">›</span>
+    </div>
+    <div class="block-body" style="border-color:#C084FC44;">
+      <div class="block-item"><span class="item-dot" style="color:#C084FC;">▸</span><span class="item-text">Treadmill brisk walk — 5 min at 5 km/h</span></div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-left"><span class="block-icon">💪</span><div><div class="block-label" style="color:#9090B0;">Strength — Upper Body</div><div class="block-dur">25 min</div></div></div>
+      <span class="block-arrow" style="color:#C084FC;">›</span>
+    </div>
+    <div class="block-body" style="border-color:#C084FC44;">
+      <div class="block-item"><span class="item-dot" style="color:#C084FC;">▸</span><span class="item-text">Knee push-ups — 3×8 (progress to 3×12 over weeks)</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#C084FC;">▸</span><span class="item-text">Dumbbell shoulder press 2kg — 3×12</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#C084FC;">▸</span><span class="item-text">Dumbbell lateral raises 2kg — 3×12</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#C084FC;">▸</span><span class="item-text">Dumbbell bicep curls 2kg — 3×12</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#C084FC;">▸</span><span class="item-text">Bent-over dumbbell rows 2kg — 3×12</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#C084FC;">▸</span><span class="item-text">Tricep kickbacks 2kg — 3×12</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#C084FC;">▸</span><span class="item-text">Rest 45–60 sec between sets</span></div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-left"><span class="block-icon">🧘</span><div><div class="block-label" style="color:#9090B0;">Yoga — Upper Body Release</div><div class="block-dur">15 min</div></div></div>
+      <span class="block-arrow" style="color:#C084FC;">›</span>
+    </div>
+    <div class="block-body" style="border-color:#C084FC44;">
+      <div class="block-item"><span class="item-dot" style="color:#C084FC;">▸</span><span class="item-text">Cat-Cow — 10 breaths</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#C084FC;">▸</span><span class="item-text">Thread the Needle (each side) — 5 breaths</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#C084FC;">▸</span><span class="item-text">Downward Dog — 5 breaths</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#C084FC;">▸</span><span class="item-text">Puppy Pose (chest stretch) — 8 breaths</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#C084FC;">▸</span><span class="item-text">Seated forward fold — 8 breaths</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#C084FC;">▸</span><span class="item-text">Supine twist (each side) — 5 breaths</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#C084FC;">▸</span><span class="item-text">Savasana — 2 min</span></div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-left"><span class="block-icon">🌬️</span><div><div class="block-label" style="color:#9090B0;">Sudarshan Kriya <span class="block-note" style="color:#C084FC;">· At home</span></div><div class="block-dur">15 min</div></div></div>
+      <span class="block-arrow" style="color:#C084FC;">›</span>
+    </div>
+    <div class="block-body" style="border-color:#C084FC44;">
+      <div class="block-item"><span class="item-dot" style="color:#C084FC;">▸</span><span class="item-text">Ujjayi breathing (slow) — 2 min</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#C084FC;">▸</span><span class="item-text">Bhastrika pranayama — 3 rounds</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#C084FC;">▸</span><span class="item-text">So-Hum chant — 3 rounds</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#C084FC;">▸</span><span class="item-text">Kriya rhythmic breathing (slow–medium–fast) — 8 min</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#C084FC;">▸</span><span class="item-text">Rest in silence — 2 min</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- TUESDAY -->
+<div class="day-panel" id="panel-1">
+  <div class="day-header" style="background:linear-gradient(135deg,#05966922,#111119 60%);border-color:#34D39933;">
+    <p class="day-eyebrow" style="color:#34D399;">Tuesday</p>
+    <h2 class="day-title">Cardio + Hip &amp; Core Yoga</h2>
+    <div class="day-tags">
+      <span class="tag" style="background:#34D39922;color:#34D399;border-color:#34D39944;">Cardio</span>
+      <span class="tag" style="background:#34D39922;color:#34D399;border-color:#34D39944;">Yoga</span>
+      <span class="tag" style="background:#34D39922;color:#34D399;border-color:#34D39944;">Kriya</span>
+    </div>
+  </div>
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-left"><span class="block-icon">🏃</span><div><div class="block-label" style="color:#9090B0;">Cardio — Treadmill Intervals</div><div class="block-dur">30 min</div></div></div>
+      <span class="block-arrow" style="color:#34D399;">›</span>
+    </div>
+    <div class="block-body" style="border-color:#34D39944;">
+      <div class="block-item"><span class="item-dot" style="color:#34D399;">▸</span><span class="item-text">Warm-up walk 5 km/h — 5 min</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#34D399;">▸</span><span class="item-text">Brisk walk 6 km/h — 3 min</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#34D399;">▸</span><span class="item-text">Light jog 7–8 km/h — 2 min</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#34D399;">▸</span><span class="item-text">Repeat walk/jog cycle × 4 rounds</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#34D399;">▸</span><span class="item-text">Cool-down walk 4.5 km/h — 5 min</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#34D399;">▸</span><span class="item-text">Target heart rate: 120–140 BPM</span></div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-left"><span class="block-icon">🧘</span><div><div class="block-label" style="color:#9090B0;">Yoga — Hips &amp; Core</div><div class="block-dur">15 min</div></div></div>
+      <span class="block-arrow" style="color:#34D399;">›</span>
+    </div>
+    <div class="block-body" style="border-color:#34D39944;">
+      <div class="block-item"><span class="item-dot" style="color:#34D399;">▸</span><span class="item-text">Low Lunge (each side) — 6 breaths</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#34D399;">▸</span><span class="item-text">Lizard Pose with block support — 6 breaths each</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#34D399;">▸</span><span class="item-text">Pigeon Pose (each side) — 8 breaths</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#34D399;">▸</span><span class="item-text">Boat Pose — 3×5 breaths (core)</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#34D399;">▸</span><span class="item-text">Bridge Pose — 3×8 reps</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#34D399;">▸</span><span class="item-text">Happy Baby — 8 breaths</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#34D399;">▸</span><span class="item-text">Savasana — 2 min</span></div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-left"><span class="block-icon">🌬️</span><div><div class="block-label" style="color:#9090B0;">Sudarshan Kriya <span class="block-note" style="color:#34D399;">· At home</span></div><div class="block-dur">15 min</div></div></div>
+      <span class="block-arrow" style="color:#34D399;">›</span>
+    </div>
+    <div class="block-body" style="border-color:#34D39944;">
+      <div class="block-item"><span class="item-dot" style="color:#34D399;">▸</span><span class="item-text">Nadi Shodhana (alternate nostril) — 5 min</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#34D399;">▸</span><span class="item-text">Bhastrika — 3 rounds</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#34D399;">▸</span><span class="item-text">So-Hum — 3 rounds</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#34D399;">▸</span><span class="item-text">Kriya rhythmic breathing — 5 min</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#34D399;">▸</span><span class="item-text">Silence — 2 min</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- WEDNESDAY -->
+<div class="day-panel" id="panel-2">
+  <div class="day-header" style="background:linear-gradient(135deg,#B4530922,#111119 60%);border-color:#F59E0B33;">
+    <p class="day-eyebrow" style="color:#F59E0B;">Wednesday</p>
+    <h2 class="day-title">Lower Body + Balance Yoga</h2>
+    <div class="day-tags">
+      <span class="tag" style="background:#F59E0B22;color:#F59E0B;border-color:#F59E0B44;">Strength</span>
+      <span class="tag" style="background:#F59E0B22;color:#F59E0B;border-color:#F59E0B44;">Yoga</span>
+      <span class="tag" style="background:#F59E0B22;color:#F59E0B;border-color:#F59E0B44;">Kriya</span>
+    </div>
+  </div>
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-left"><span class="block-icon">🌅</span><div><div class="block-label" style="color:#9090B0;">Warm-Up</div><div class="block-dur">5 min</div></div></div>
+      <span class="block-arrow" style="color:#F59E0B;">›</span>
+    </div>
+    <div class="block-body" style="border-color:#F59E0B44;">
+      <div class="block-item"><span class="item-dot" style="color:#F59E0B;">▸</span><span class="item-text">Treadmill walk 5 km/h — 5 min</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F59E0B;">▸</span><span class="item-text">Leg swings + hip circles — 2 min</span></div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-left"><span class="block-icon">🦵</span><div><div class="block-label" style="color:#9090B0;">Strength — Lower Body</div><div class="block-dur">25 min</div></div></div>
+      <span class="block-arrow" style="color:#F59E0B;">›</span>
+    </div>
+    <div class="block-body" style="border-color:#F59E0B44;">
+      <div class="block-item"><span class="item-dot" style="color:#F59E0B;">▸</span><span class="item-text">Bodyweight squats — 3×15</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F59E0B;">▸</span><span class="item-text">Dumbbell goblet squats 5kg — 3×10</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F59E0B;">▸</span><span class="item-text">Reverse lunges (alternating) — 3×10 each leg</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F59E0B;">▸</span><span class="item-text">Dumbbell Romanian deadlift 5kg — 3×10</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F59E0B;">▸</span><span class="item-text">Standing calf raises — 3×15</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F59E0B;">▸</span><span class="item-text">Glute bridges on mat — 3×15</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F59E0B;">▸</span><span class="item-text">Rest 45–60 sec between sets</span></div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-left"><span class="block-icon">🧘</span><div><div class="block-label" style="color:#9090B0;">Yoga — Balance &amp; Legs</div><div class="block-dur">15 min</div></div></div>
+      <span class="block-arrow" style="color:#F59E0B;">›</span>
+    </div>
+    <div class="block-body" style="border-color:#F59E0B44;">
+      <div class="block-item"><span class="item-dot" style="color:#F59E0B;">▸</span><span class="item-text">Warrior I (each side) — 5 breaths</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F59E0B;">▸</span><span class="item-text">Warrior II (each side) — 5 breaths</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F59E0B;">▸</span><span class="item-text">Triangle Pose with block — 5 breaths each</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F59E0B;">▸</span><span class="item-text">Tree Pose (each side) — 8 breaths</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F59E0B;">▸</span><span class="item-text">Standing forward fold — 8 breaths</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F59E0B;">▸</span><span class="item-text">Legs-up-the-wall — 3 min (recovery)</span></div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-left"><span class="block-icon">🌬️</span><div><div class="block-label" style="color:#9090B0;">Sudarshan Kriya <span class="block-note" style="color:#F59E0B;">· At home</span></div><div class="block-dur">15 min</div></div></div>
+      <span class="block-arrow" style="color:#F59E0B;">›</span>
+    </div>
+    <div class="block-body" style="border-color:#F59E0B44;">
+      <div class="block-item"><span class="item-dot" style="color:#F59E0B;">▸</span><span class="item-text">Ujjayi — 2 min</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F59E0B;">▸</span><span class="item-text">Bhastrika — 3 rounds</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F59E0B;">▸</span><span class="item-text">So-Hum — 3 rounds</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F59E0B;">▸</span><span class="item-text">Kriya rhythmic breathing — 8 min</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F59E0B;">▸</span><span class="item-text">Silence — 2 min</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- THURSDAY -->
+<div class="day-panel" id="panel-3">
+  <div class="day-header" style="background:linear-gradient(135deg,#1D4ED822,#111119 60%);border-color:#60A5FA33;">
+    <p class="day-eyebrow" style="color:#60A5FA;">Thursday</p>
+    <h2 class="day-title">Cardio + Full Body Yoga</h2>
+    <div class="day-tags">
+      <span class="tag" style="background:#60A5FA22;color:#60A5FA;border-color:#60A5FA44;">Cardio</span>
+      <span class="tag" style="background:#60A5FA22;color:#60A5FA;border-color:#60A5FA44;">Yoga</span>
+      <span class="tag" style="background:#60A5FA22;color:#60A5FA;border-color:#60A5FA44;">Kriya</span>
+    </div>
+  </div>
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-left"><span class="block-icon">❤️</span><div><div class="block-label" style="color:#9090B0;">Cardio — Steady State</div><div class="block-dur">30 min</div></div></div>
+      <span class="block-arrow" style="color:#60A5FA;">›</span>
+    </div>
+    <div class="block-body" style="border-color:#60A5FA44;">
+      <div class="block-item"><span class="item-dot" style="color:#60A5FA;">▸</span><span class="item-text">Treadmill walk/light jog — comfortable pace</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#60A5FA;">▸</span><span class="item-text">Target: conversation pace (aerobic zone)</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#60A5FA;">▸</span><span class="item-text">Speed: 5.5–6.5 km/h — 30 continuous minutes</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#60A5FA;">▸</span><span class="item-text">Focus on nasal breathing throughout</span></div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-left"><span class="block-icon">☀️</span><div><div class="block-label" style="color:#9090B0;">Yoga — Sun Salutation Flow</div><div class="block-dur">15 min</div></div></div>
+      <span class="block-arrow" style="color:#60A5FA;">›</span>
+    </div>
+    <div class="block-body" style="border-color:#60A5FA44;">
+      <div class="block-item"><span class="item-dot" style="color:#60A5FA;">▸</span><span class="item-text">Surya Namaskar A (modified) — 5 rounds</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#60A5FA;">▸</span><span class="item-text">Child's Pose — 5 breaths between rounds</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#60A5FA;">▸</span><span class="item-text">Seated spinal twist — 5 breaths each</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#60A5FA;">▸</span><span class="item-text">Reclined butterfly — 5 breaths</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#60A5FA;">▸</span><span class="item-text">Savasana — 3 min</span></div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-left"><span class="block-icon">🌬️</span><div><div class="block-label" style="color:#9090B0;">Sudarshan Kriya <span class="block-note" style="color:#60A5FA;">· At home</span></div><div class="block-dur">15 min</div></div></div>
+      <span class="block-arrow" style="color:#60A5FA;">›</span>
+    </div>
+    <div class="block-body" style="border-color:#60A5FA44;">
+      <div class="block-item"><span class="item-dot" style="color:#60A5FA;">▸</span><span class="item-text">Nadi Shodhana — 5 min</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#60A5FA;">▸</span><span class="item-text">Bhastrika — 3 rounds</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#60A5FA;">▸</span><span class="item-text">So-Hum — 3 rounds</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#60A5FA;">▸</span><span class="item-text">Kriya — 5 min</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#60A5FA;">▸</span><span class="item-text">Silence — 2 min</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- SATURDAY -->
+<div class="day-panel" id="panel-4">
+  <div class="day-header" style="background:linear-gradient(135deg,#B91C1C22,#111119 60%);border-color:#F8717133;">
+    <p class="day-eyebrow" style="color:#F87171;">Saturday</p>
+    <h2 class="day-title">Full Body Strength + Deep Yoga</h2>
+    <div class="day-tags">
+      <span class="tag" style="background:#F8717122;color:#F87171;border-color:#F8717144;">Strength</span>
+      <span class="tag" style="background:#F8717122;color:#F87171;border-color:#F8717144;">Cardio</span>
+      <span class="tag" style="background:#F8717122;color:#F87171;border-color:#F8717144;">Yoga</span>
+      <span class="tag" style="background:#F8717122;color:#F87171;border-color:#F8717144;">Kriya</span>
+    </div>
+  </div>
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-left"><span class="block-icon">🔥</span><div><div class="block-label" style="color:#9090B0;">Warm-Up Cardio</div><div class="block-dur">10 min</div></div></div>
+      <span class="block-arrow" style="color:#F87171;">›</span>
+    </div>
+    <div class="block-body" style="border-color:#F8717144;">
+      <div class="block-item"><span class="item-dot" style="color:#F87171;">▸</span><span class="item-text">Treadmill: 2 min walk / 1 min jog × 3 rounds</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F87171;">▸</span><span class="item-text">Arm circles, shoulder rolls, hip openers — 2 min</span></div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-left"><span class="block-icon">⚡</span><div><div class="block-label" style="color:#9090B0;">Strength — Full Body Circuit</div><div class="block-dur">25 min · 2 rounds</div></div></div>
+      <span class="block-arrow" style="color:#F87171;">›</span>
+    </div>
+    <div class="block-body" style="border-color:#F8717144;">
+      <div class="block-item"><span class="item-dot" style="color:#F87171;">▸</span><span class="item-text">Knee push-ups — 10 reps</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F87171;">▸</span><span class="item-text">Dumbbell squat + press 2kg — 10 reps</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F87171;">▸</span><span class="item-text">Bent-over row 2kg — 10 reps each arm</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F87171;">▸</span><span class="item-text">Reverse lunge + curl 2kg — 8 reps each</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F87171;">▸</span><span class="item-text">Glute bridge — 12 reps</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F87171;">▸</span><span class="item-text">Plank hold — 20–30 sec</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F87171;">▸</span><span class="item-text">Rest 60–90 sec between circuits</span></div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-left"><span class="block-icon">🌿</span><div><div class="block-label" style="color:#9090B0;">Yoga — Deep Stretch</div><div class="block-dur">10 min</div></div></div>
+      <span class="block-arrow" style="color:#F87171;">›</span>
+    </div>
+    <div class="block-body" style="border-color:#F8717144;">
+      <div class="block-item"><span class="item-dot" style="color:#F87171;">▸</span><span class="item-text">Yin-style: hold each pose 1–2 min</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F87171;">▸</span><span class="item-text">Butterfly fold</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F87171;">▸</span><span class="item-text">Dragon Pose (each side) with block</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F87171;">▸</span><span class="item-text">Sleeping Swan / Pigeon</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F87171;">▸</span><span class="item-text">Supine spinal twist</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F87171;">▸</span><span class="item-text">Savasana — 2 min</span></div>
+    </div>
+  </div>
+  <div class="block">
+    <div class="block-header" onclick="toggleBlock(this)">
+      <div class="block-left"><span class="block-icon">🌬️</span><div><div class="block-label" style="color:#9090B0;">Sudarshan Kriya <span class="block-note" style="color:#F87171;">· At home</span></div><div class="block-dur">15 min</div></div></div>
+      <span class="block-arrow" style="color:#F87171;">›</span>
+    </div>
+    <div class="block-body" style="border-color:#F8717144;">
+      <div class="block-item"><span class="item-dot" style="color:#F87171;">▸</span><span class="item-text">Ujjayi — 3 min</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F87171;">▸</span><span class="item-text">Bhastrika — 3 rounds</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F87171;">▸</span><span class="item-text">So-Hum — 3 rounds</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F87171;">▸</span><span class="item-text">Kriya rhythmic breathing — 7 min</span></div>
+      <div class="block-item"><span class="item-dot" style="color:#F87171;">▸</span><span class="item-text">Extended silence — 2 min</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Weekly Overview -->
+<div style="padding: 0 20px;">
+  <div class="info-card">
+    <p class="info-card-label">Weekly Overview</p>
+    <div class="week-grid">
+      <div class="week-day-col"><div class="week-bar" style="background:#C084FC;"></div><div class="week-name">MON</div><div class="week-tags">Strength + Yoga</div></div>
+      <div class="week-day-col"><div class="week-bar" style="background:#34D399;"></div><div class="week-name">TUE</div><div class="week-tags">Cardio + Yoga</div></div>
+      <div class="week-day-col"><div class="week-bar" style="background:#F59E0B;"></div><div class="week-name">WED</div><div class="week-tags">Strength + Yoga</div></div>
+      <div class="week-day-col"><div class="week-bar" style="background:#60A5FA;"></div><div class="week-name">THU</div><div class="week-tags">Cardio + Yoga</div></div>
+      <div class="week-day-col"><div class="week-bar" style="background:#F87171;"></div><div class="week-name">SAT</div><div class="week-tags">Full Body</div></div>
+    </div>
+    <p class="rest-note">Fri + Sun — Rest. Light walk or gentle stretching only.</p>
+  </div>
+
+  <div class="info-card">
+    <p class="info-card-label">8-Week Progression</p>
+    <div class="prog-row"><span class="prog-week">Weeks 1–2</span><span class="prog-tip">Master form. Use 2kg only. Do knee push-ups. Focus on breathing in yoga.</span></div>
+    <div class="prog-row"><span class="prog-week">Weeks 3–4</span><span class="prog-tip">Add 1–2 reps per set. Try 1–2 full push-ups at end of each set.</span></div>
+    <div class="prog-row"><span class="prog-week">Weeks 5–6</span><span class="prog-tip">Introduce 5kg for squats + deadlifts. Increase treadmill speed by 0.5 km/h.</span></div>
+    <div class="prog-row"><span class="prog-week">Weeks 7–8</span><span class="prog-tip">Move to 5kg for upper body rows. Aim for 10 full push-ups in a row.</span></div>
+  </div>
+
+  <div class="info-card" style="background:#0C0C14;">
+    <p class="info-card-label">Equipment</p>
+    <p class="equip-note">2kg dumbbells · 5kg dumbbells · Treadmill · Yoga mat · Yoga block · Bench</p>
+    <p class="equip-sub">Sudarshan Kriya is done at home after returning from gym. Wait 10–15 min after exercise before starting pranayama.</p>
+  </div>
+</div>
+
+<script>
+  const colors = ['#C084FC','#34D399','#F59E0B','#60A5FA','#F87171'];
+  function switchDay(idx, btn) {
+    document.querySelectorAll('.day-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.day-tab').forEach(t => {
+      t.classList.remove('active');
+      t.style.background = '#111119';
+      t.style.borderColor = '#1E1E2E';
+      t.style.color = '#666680';
+    });
+    document.getElementById('panel-' + idx).classList.add('active');
+    btn.classList.add('active');
+    btn.style.background = colors[idx];
+    btn.style.borderColor = colors[idx];
+    btn.style.color = '#000';
+    document.querySelectorAll('#panel-' + idx + ' .block-body').forEach(b => b.classList.remove('open'));
+    document.querySelectorAll('#panel-' + idx + ' .block-arrow').forEach(a => a.classList.remove('open'));
+    document.querySelectorAll('#panel-' + idx + ' .block-header').forEach(h => h.classList.remove('open'));
+  }
+  function toggleBlock(header) {
+    const body = header.nextElementSibling;
+    const arrow = header.querySelector('.block-arrow');
+    const isOpen = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    arrow.classList.toggle('open', !isOpen);
+    header.classList.toggle('open', !isOpen);
+    if (!isOpen) {
+      const color = arrow.style.color;
+      header.style.borderColor = color.replace(')', '66)').replace('rgb', 'rgba').replace('rgba(', 'rgba(');
+      header.style.borderColor = color + '66';
+    } else {
+      header.style.borderColor = '#1E1E2E';
+    }
+  }
+</script>
+</body>
+</html>
